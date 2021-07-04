@@ -36,7 +36,8 @@ mongoose.set('useFindAndModify', false);
 const userSchema = new mongoose.Schema({
     email: String,
     password: String,
-    googleId: String
+    googleId: String,
+    secret: Array
 });
 
 userSchema.plugin(passportLocalMongoose);
@@ -88,11 +89,11 @@ passport.use(new FacebookStrategy({
 //     statusChangeCallback(response);
 // });
 
-function checkLoginState() {
-    FB.getLoginStatus(function (response) {
-        statusChangeCallback(response);
-    });
-}
+// function checkLoginState() {
+//     FB.getLoginStatus(function (response) {
+//         statusChangeCallback(response);
+//     });
+// }
 
 app.get("/", function (req, res) {
     res.render("home");
@@ -128,12 +129,49 @@ app.get("/register", function (req, res) {
 });
 
 app.get("/secrets", function (req, res) {
+
     if (req.isAuthenticated()) {
-        res.render("secrets");
+        User.find({ "secret": { $ne: null } }, function (err, foundUsers) {
+            if (err) {
+                console.log(err);
+            } else {
+                if (foundUsers) {
+                    res.render("secrets", { userWithSecrets: foundUsers });
+                }
+            }
+        });
     } else {
         res.redirect("/login");
     }
 });
+
+app.get("/submit", function (req, res) {
+    if (req.isAuthenticated()) {
+        res.render("submit");
+    } else {
+        res.redirect("/login");
+    }
+});
+
+app.post("/submit", async (req, res) => {
+    // const submittedSecret = req.body.secret;
+    try {
+        await User.findOneAndUpdate({ _id: req.user.id }, { $push: { secret: req.body.secret } });
+        res.redirect("/secrets");
+    } catch (error) {
+        console.log(error);
+    }
+});
+
+// *** Previous way I did this is below. Above method allows me to give the user multiple secrets though (in addition to adding Array to secret in Schema rather than String) ***
+//     if (err) {
+//         console.log(err)
+//     } else {
+//         if (foundUser) {
+//             foundUser.secret = submittedSecret;
+//             foundUser.save(function () {
+//                 res.redirect("/secrets");
+
 
 app.get("/logout", function (req, res) {
     req.logout();
