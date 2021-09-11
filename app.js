@@ -10,7 +10,7 @@ var GoogleStrategy = require('passport-google-oauth2').Strategy;
 const findOrCreate = require("mongoose-findorcreate");
 
 const app = express();
-const port = 3000;
+const port = process.env.port || 3000;
 
 app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true }));
