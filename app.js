@@ -120,7 +120,6 @@ app.get("/submit", function (req, res) {
 });
 
 app.post("/submit", async (req, res) => {
-    // const submittedSecret = req.body.secret;
     try {
         await User.findOneAndUpdate({ _id: req.user.id }, { $push: { secret: req.body.secret } });
         res.redirect("/secrets");
